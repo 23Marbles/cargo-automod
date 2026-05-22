@@ -169,8 +169,8 @@ fn main() {
 
     let modules = builders.map(|b| b.build());
 
-    for mut m in modules {
-        m.update_current_linked_status();
+    for mut m in modules.into_iter() {
+        m.update_childrens_linked_status();
         println!("{}", m)
     }
 }

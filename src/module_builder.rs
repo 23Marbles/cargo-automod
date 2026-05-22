@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use crate::linker::{LinkThrough, Module};
 
-fn name_to_module(name: String, parent: PathBuf) -> Module {
+fn file_name_to_module(name: String, parent: PathBuf) -> Module {
     Module {
-        decl_path: parent.join(name.clone()),
-        name,
+        name: name.trim_end_matches(".rs").to_owned(),
+        decl_path: parent.join(name),
         children: Vec::with_capacity(0),
         link_privacy: None,
     }
@@ -84,7 +84,7 @@ impl ModuleBuilder {
                     if &name == "lib.rs" || &name == "main.rs" {
                         return None;
                     }
-                    Some(name_to_module(name, parent.to_path_buf()))
+                    Some(file_name_to_module(name, parent.to_path_buf()))
                 })
                 .chain(self.modules.into_iter().filter_map(|m| m.into_module()))
                 .collect(),
@@ -163,17 +163,12 @@ impl SubModule {
                     if &name == "mod.rs" {
                         return None;
                     }
-                    Some(name_to_module(name, self.path.clone()))
+                    Some(file_name_to_module(name, self.path.clone()))
                 })
                 .chain(self.modules.into_iter().filter_map(|m| m.into_module()))
                 .collect(),
             decl_path: match self.link {
-                LinkThrough::Name => self
-                    .path
-                    .parent()
-                    .unwrap()
-                    .to_path_buf()
-                    .join(self.name.clone()),
+                LinkThrough::Name => self.path.parent().unwrap().to_path_buf().join(&self.name),
                 LinkThrough::ModChild => self.path.join("mod.rs"),
                 LinkThrough::None => {
                     return None;

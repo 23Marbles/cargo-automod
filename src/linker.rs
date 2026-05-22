@@ -38,7 +38,7 @@ pub struct Module {
 const MOD_FINDER_REGEX: &str = r"(?m)^\s*(?:(pub(?:\(crate\)|\(super\)|\(self\))?)\s+)?mod\s+(\w+)";
 
 impl Module {
-    pub fn update_current_linked_status(&mut self) {
+    pub fn update_childrens_linked_status(&mut self) {
         let file_inner = fs::read_to_string(&self.decl_path)
             .map_err(|e| error_exit(e))
             .unwrap();
@@ -58,6 +58,12 @@ impl Module {
                 .find(|Module { name: m_name, .. }| m_name == name)
                 .map(|m| m.link_privacy = Some(privacy));
         }
+
+        drop(file_inner);
+
+        for c in &mut self.children {
+            c.update_childrens_linked_status();
+        }
     }
 
     fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, indent: usize) -> fmt::Result {
@@ -65,7 +71,15 @@ impl Module {
         for _ in 0..indent {
             write!(f, "    ")?; // 4‑space indent
         }
-        writeln!(f, "{}", self.name)?;
+        writeln!(
+            f,
+            "`{}` {}[{}]",
+            self.name,
+            " ".repeat(15usize.saturating_sub(self.name.len())),
+            self.link_privacy
+                .as_ref()
+                .map_or("unlinked".to_string(), LinkKind::to_string),
+        )?;
 
         // Print children
         for child in &self.children {
