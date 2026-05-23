@@ -91,7 +91,7 @@ fn error_exit(e: impl Display) -> ! {
 }
 
 fn generate_builders(src_folder: PathBuf, name: String, link_to: LinkTo) -> Vec<ModuleBuilder> {
-    match link_to {
+    let out = match link_to {
         LinkTo::Binary => {
             let path = src_folder.join("main.rs");
             if path.exists() {
@@ -145,7 +145,15 @@ fn generate_builders(src_folder: PathBuf, name: String, link_to: LinkTo) -> Vec<
                 )),
             }
         }
+    };
+
+    if out.len() > 1 {
+        error_exit(
+            "Cannot currently support multiple roots in one workspace (main.rs & lib.rs)\nPlease specify one to use with either --lib or --bin",
+        )
     }
+
+    out
 }
 
 fn main() {
