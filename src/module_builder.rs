@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::path::PathBuf;
 
 use crate::linker::{LinkThrough, Module};
 

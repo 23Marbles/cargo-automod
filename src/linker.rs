@@ -60,10 +60,13 @@ impl Module {
 
             let name = cap.get(2).unwrap().as_str();
 
-            self.children
+            if let Some(m) = self
+                .children
                 .iter_mut()
                 .find(|Module { name: m_name, .. }| m_name == name)
-                .map(|m| m.link_privacy = Some(privacy));
+            {
+                m.link_privacy = Some(privacy)
+            }
         }
 
         drop(file_inner);
@@ -84,7 +87,7 @@ impl Module {
             if c.link_privacy.is_none() {
                 if !dry {
                     file.write_all(
-                        (link_kind.to_rust_syntax(&c.name) + "mod " + &c.name + ";\n").as_bytes(),
+                        (link_kind.as_rust_syntax(&c.name) + "mod " + &c.name + ";\n").as_bytes(),
                     )
                     .expect("Failed to write to file");
                 }

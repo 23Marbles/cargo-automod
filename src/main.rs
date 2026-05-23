@@ -19,7 +19,7 @@ enum LinkKind {
 }
 
 impl LinkKind {
-    pub fn to_rust_syntax(&self, name: &str) -> String {
+    pub fn as_rust_syntax(&self, name: &str) -> String {
         let vis = match self {
             LinkKind::Private => "",
             LinkKind::Public => "pub ",
