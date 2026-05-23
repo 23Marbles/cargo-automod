@@ -25,7 +25,9 @@ impl LinkThrough {
     pub fn update_link(&mut self, kind: LinkThrough) {
         *self = match self {
             LinkThrough::None => kind,
-            _ => panic!("Cannot have multiple files acting as the base for one module"),
+            _ => {
+                error_exit("Cannot have multiple files acting as the base for one module");
+            }
         };
     }
 }
