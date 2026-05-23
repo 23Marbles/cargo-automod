@@ -1,11 +1,11 @@
-use std::path::PathBuf;
+use std::{borrow::Cow, path::PathBuf};
 
 use crate::linker::{LinkThrough, Module};
 
 fn file_name_to_module(name: String, parent: PathBuf) -> Module {
     Module {
-        name: name.trim_end_matches(".rs").to_owned(),
-        decl_path: parent.join(name),
+        name: name.clone(),
+        decl_path: parent.join(name + ".rs"),
         children: Vec::with_capacity(0),
         link_privacy: None,
     }
@@ -56,8 +56,11 @@ impl ModuleBuilder {
                 new.build_children();
                 self.modules.push(new)
             } else if file_kind.is_file() && path.extension() == Some("rs".as_ref()) {
-                self.files
-                    .push(path.file_name().unwrap().to_string_lossy().into_owned());
+                let name = path.file_name().unwrap().to_string_lossy();
+                match name {
+                    n if n == "lib.rs" || n == "main.rs" => {}
+                    n => self.files.push(n.trim_end_matches(".rs").to_owned()),
+                }
             }
         }
         self
@@ -86,7 +89,7 @@ impl ModuleBuilder {
                     }
                     Some(file_name_to_module(name, parent.to_path_buf()))
                 })
-                .chain(self.modules.into_iter().filter_map(|m| m.into_module()))
+                .chain(self.modules.into_iter().map(|m| m.into_module()))
                 .collect(),
             decl_path: self.path,
             name: self.name,
@@ -134,8 +137,13 @@ impl SubModule {
                 new.build_children();
                 self.modules.push(new)
             } else if file_kind.is_file() && path.extension() == Some("rs".as_ref()) {
-                self.files
-                    .push(path.file_name().unwrap().to_string_lossy().into_owned());
+                self.files.push(
+                    path.file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .trim_end_matches(".rs")
+                        .to_owned(),
+                );
             }
         }
     }
@@ -149,13 +157,13 @@ impl SubModule {
             }
         }
 
-        if self.files.contains(&"mod.rs".to_owned()) {
-            self.link.update_link(LinkThrough::ModChild);
+        if self.files.iter().any(|f| f == "mod.rs") {
+            self.link = LinkThrough::ModChild;
         }
     }
 
-    fn into_module(self) -> Option<Module> {
-        Some(Module {
+    fn into_module(self) -> Module {
+        Module {
             children: self
                 .files
                 .into_iter()
@@ -165,17 +173,20 @@ impl SubModule {
                     }
                     Some(file_name_to_module(name, self.path.clone()))
                 })
-                .chain(self.modules.into_iter().filter_map(|m| m.into_module()))
+                .chain(self.modules.into_iter().map(|m| m.into_module()))
                 .collect(),
             decl_path: match self.link {
-                LinkThrough::Name => self.path.parent().unwrap().to_path_buf().join(&self.name),
+                LinkThrough::Name => self
+                    .path
+                    .parent()
+                    .unwrap()
+                    .to_path_buf()
+                    .join(self.name.clone() + ".rs"),
                 LinkThrough::ModChild => self.path.join("mod.rs"),
-                LinkThrough::None => {
-                    return None;
-                }
+                LinkThrough::None => self.path.join("mod.rs"),
             },
             name: self.name,
             link_privacy: None,
-        })
+        }
     }
 }
