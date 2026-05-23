@@ -42,7 +42,8 @@ pub struct Module {
     pub children: Vec<Module>,
 }
 
-const MOD_FINDER_REGEX: &str = r"(?m)^\s*(?:(pub(?:\(crate\)|\(super\)|\(self\))?)\s+)?mod\s+(\w+)";
+const MOD_FINDER_REGEX: &str =
+    r"(?m)^\s*(?:(pub(?:\(crate\)|\(super\)|\(self\))?)\s+)?mod\s+(\w+);";
 
 impl Module {
     pub fn update_childrens_linked_status(&mut self) {
