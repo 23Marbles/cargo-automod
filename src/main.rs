@@ -181,7 +181,8 @@ fn main() {
 
     for mut m in modules.into_iter() {
         m.update_childrens_linked_status();
+        println!("before:\n{}\n---\n", m);
         m.link_unlinked_children(link_kind);
-        println!("{}", m)
+        println!("after:\n{}", m)
     }
 }
