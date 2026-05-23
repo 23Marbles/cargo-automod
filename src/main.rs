@@ -158,15 +158,13 @@ fn main() {
     if let Some(path) = args.rust_repo {
         metadata_cmd.current_dir(path);
     }
+    metadata_cmd.no_deps();
 
     let metadata = metadata_cmd.exec().map_err(error_exit).unwrap();
-
-    let workspace_ids = metadata.workspace_members;
 
     let repos: Vec<(String, PathBuf)> = metadata
         .packages
         .into_iter()
-        .filter(|p| workspace_ids.contains(&p.id)) // ← only your crates
         .map(|p| {
             (
                 p.name.to_string(),
