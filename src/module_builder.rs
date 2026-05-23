@@ -78,21 +78,34 @@ impl ModuleBuilder {
     }
 
     fn into_module(self) -> Module {
-        let parent = self.path.parent().unwrap();
+        let Self {
+            path,
+            name,
+            modules,
+            files,
+        } = self;
+
+        let parent = path.parent().unwrap();
+        let module_names: Vec<String> = modules.iter().map(|m| m.name.clone()).collect();
+
         Module {
-            children: self
-                .files
+            children: files
                 .into_iter()
                 .filter_map(|name| {
-                    if &name == "lib.rs" || &name == "main.rs" {
+                    if &name == "lib.rs"
+                        || &name == "main.rs"
+                        || module_names
+                            .iter()
+                            .any(|m_name| m_name == name.trim_end_matches(".rs"))
+                    {
                         return None;
                     }
                     Some(file_name_to_module(name, parent.to_path_buf()))
                 })
-                .chain(self.modules.into_iter().map(|m| m.into_module()))
+                .chain(modules.into_iter().map(|m| m.into_module()))
                 .collect(),
-            decl_path: self.path,
-            name: self.name,
+            decl_path: path,
+            name: name,
             link_privacy: None,
         }
     }
@@ -163,29 +176,38 @@ impl SubModule {
     }
 
     fn into_module(self) -> Module {
+        let Self {
+            path,
+            name,
+            link,
+            modules,
+            files,
+        } = self;
+
+        let module_names: Vec<String> = modules.iter().map(|m| m.name.clone()).collect();
+
         Module {
-            children: self
-                .files
+            children: files
                 .into_iter()
-                .filter_map(|name| {
-                    if &name == "mod" {
+                .filter_map(|f_name| {
+                    if f_name == "mod" || module_names.iter().any(|m_name| m_name == &f_name) {
                         return None;
                     }
-                    Some(file_name_to_module(name, self.path.clone()))
+
+                    Some(file_name_to_module(f_name, path.clone()))
                 })
-                .chain(self.modules.into_iter().map(|m| m.into_module()))
+                .chain(modules.into_iter().map(|m| m.into_module()))
                 .collect(),
-            decl_path: match self.link {
-                LinkThrough::Name => self
-                    .path
+            decl_path: match link {
+                LinkThrough::Name => path
                     .parent()
                     .unwrap()
                     .to_path_buf()
-                    .join(self.name.clone() + ".rs"),
-                LinkThrough::ModChild => self.path.join("mod.rs"),
-                LinkThrough::None => self.path.join("mod.rs"),
+                    .join(name.clone() + ".rs"),
+                LinkThrough::ModChild => path.join("mod.rs"),
+                LinkThrough::None => path.join("mod.rs"),
             },
-            name: self.name,
+            name: name,
             link_privacy: None,
         }
     }

@@ -70,8 +70,6 @@ impl Module {
             }
         }
 
-        drop(file_inner);
-
         for c in &mut self.children {
             c.update_childrens_linked_status();
         }
@@ -87,7 +85,7 @@ impl Module {
         for c in &mut self.children {
             if c.link_privacy.is_none() {
                 if !dry {
-                    file.write_all((link_kind.as_rust_syntax(&c.name) + "\n").as_bytes())
+                    writeln!(file, "{}", link_kind.as_rust_syntax(&c.name))
                         .expect("Failed to write to file");
                 }
                 c.link_privacy = Some(link_kind)
