@@ -157,7 +157,7 @@ impl SubModule {
             }
         }
 
-        if self.files.iter().any(|f| f == "mod.rs") {
+        if self.files.iter().any(|f| f == "mod") {
             self.link = LinkThrough::ModChild;
         }
     }
@@ -168,7 +168,7 @@ impl SubModule {
                 .files
                 .into_iter()
                 .filter_map(|name| {
-                    if &name == "mod.rs" {
+                    if &name == "mod" {
                         return None;
                     }
                     Some(file_name_to_module(name, self.path.clone()))
