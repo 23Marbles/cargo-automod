@@ -10,7 +10,7 @@ use crate::module_builder::ModuleBuilder;
 mod linker;
 pub mod module_builder;
 
-#[derive(Clone, clap::ValueEnum, Debug)]
+#[derive(Clone, Copy, clap::ValueEnum, Debug)]
 enum LinkKind {
     Private,
     Public,
@@ -19,6 +19,17 @@ enum LinkKind {
 }
 
 impl LinkKind {
+    pub fn to_rust_syntax(&self, name: &str) -> String {
+        let vis = match self {
+            LinkKind::Private => "",
+            LinkKind::Public => "pub ",
+            LinkKind::Crate => "pub(crate) ",
+            LinkKind::Super => "pub(super) ",
+        };
+
+        format!("{vis}mod {name}")
+    }
+
     pub fn from_rust_syntax(syn: &str) -> Option<Self> {
         match syn {
             "pub(self)" => Some(LinkKind::Private),
@@ -141,6 +152,7 @@ fn main() {
     let args = Args::parse();
 
     let link_to = args.link_to();
+    let link_kind = args.privacy_level;
 
     let mut metadata_cmd = MetadataCommand::new();
     if let Some(path) = args.rust_repo {
@@ -171,6 +183,7 @@ fn main() {
 
     for mut m in modules.into_iter() {
         m.update_childrens_linked_status();
+        m.link_unlinked_children(link_kind);
         println!("{}", m)
     }
 }
