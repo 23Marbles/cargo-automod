@@ -71,7 +71,7 @@ impl Module {
         }
     }
 
-    pub(crate) fn link_unlinked_children(&mut self, link_kind: LinkKind) {
+    pub(crate) fn link_unlinked_children(&mut self, link_kind: LinkKind, dry: bool) {
         let mut file = OpenOptions::new()
             .append(true)
             .create(true)
@@ -80,14 +80,16 @@ impl Module {
 
         for c in &mut self.children {
             if c.link_privacy.is_none() {
-                file.write_all(
-                    (link_kind.to_rust_syntax(&c.name) + "mod " + &c.name + ";\n").as_bytes(),
-                )
-                .expect("Failed to write to file");
+                if !dry {
+                    file.write_all(
+                        (link_kind.to_rust_syntax(&c.name) + "mod " + &c.name + ";\n").as_bytes(),
+                    )
+                    .expect("Failed to write to file");
+                }
                 c.link_privacy = Some(link_kind)
             }
 
-            c.link_unlinked_children(link_kind);
+            c.link_unlinked_children(link_kind, dry);
         }
     }
 

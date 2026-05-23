@@ -61,6 +61,10 @@ struct Args {
     #[arg(long, short)]
     rust_repo: Option<PathBuf>,
 
+    /// Do not edit the actual data
+    #[arg(long = "dry",  action = clap::ArgAction::SetTrue)]
+    dry: bool,
+
     /// The privacy level that each module will be declared as.
     #[arg(long, short = 'p', default_value_t = LinkKind::Private)]
     privacy_level: LinkKind,
@@ -190,7 +194,7 @@ fn main() {
     for mut m in modules.into_iter() {
         m.update_childrens_linked_status();
         println!("before:\n{}\n---\n", m);
-        m.link_unlinked_children(link_kind);
+        m.link_unlinked_children(link_kind, args.dry);
         println!("after:\n{}", m)
     }
 }
