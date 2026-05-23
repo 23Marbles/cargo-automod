@@ -27,7 +27,7 @@ impl LinkKind {
             LinkKind::Super => "pub(super) ",
         };
 
-        format!("{vis}mod {name}")
+        format!("{vis}mod {name};")
     }
 
     pub fn from_rust_syntax(syn: &str) -> Option<Self> {

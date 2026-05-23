@@ -86,10 +86,8 @@ impl Module {
         for c in &mut self.children {
             if c.link_privacy.is_none() {
                 if !dry {
-                    file.write_all(
-                        (link_kind.as_rust_syntax(&c.name) + "mod " + &c.name + ";\n").as_bytes(),
-                    )
-                    .expect("Failed to write to file");
+                    file.write_all((link_kind.as_rust_syntax(&c.name) + "\n").as_bytes())
+                        .expect("Failed to write to file");
                 }
                 c.link_privacy = Some(link_kind)
             }
